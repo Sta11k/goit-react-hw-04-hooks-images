@@ -6,8 +6,8 @@ export class PixabayFetchFunc {
     this.API_KEY = API_KEY;
     this._searchQuery = '';
     this._searchPage = 1;
-    this._onLoader = false;
   }
+
   get searchQuery() {
     return this._searchQuery;
   }
@@ -26,12 +26,6 @@ export class PixabayFetchFunc {
   set searchPage(value) {
     return (this._searchPage += value);
   }
-  // get onLoader() {
-  //   return this._onLoader;
-  // }
-  // set onLoader(value) {
-  //   return this._onLoader !== value;
-  // }
 
   async getImages() {
     axios.defaults.baseURL = this.BASE_URL;

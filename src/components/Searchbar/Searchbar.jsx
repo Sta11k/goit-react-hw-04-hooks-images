@@ -1,46 +1,34 @@
-import { React, Component } from 'react';
-class Searchbar extends Component {
-  state = {
-    value: '',
-  };
+import { React, useState } from 'react';
 
-  SubmitHandler = e => {
+export default function SubmitHandler({ onSubmit }) {
+  const [value, setValue] = useState('');
+
+  const SubmitHandler = e => {
     e.preventDefault();
-    console.log(' перед отправкой', this.state.value);
-    this.props.onSubmit(this.state.value.trim().toLowerCase());
-    this.setState({ value: '' });
+    console.log(' перед отправкой', value);
+    onSubmit(value.trim().toLowerCase());
+    setValue('');
   };
-  changeHandler = e => {
-    this.setState({ value: e.target.value });
+  const changeHandler = e => {
+    setValue(e.target.value);
   };
+  return (
+    <header className="Searchbar">
+      <form className="SearchForm" onSubmit={SubmitHandler}>
+        <button type="submit" className="SearchForm-button">
+          <span className="SearchForm-button-label">Search</span>
+        </button>
 
-  // componentDidUpdate(prevProps, prevState) {
-  //   if (prevProps.searchQuery !== this.props.searchQuery)
-  //     console.log('get Fetch');
-  // }
-  render() {
-    const { value } = this.state;
-    console.log(value);
-    return (
-      <header className="Searchbar">
-        <form className="SearchForm" onSubmit={this.SubmitHandler}>
-          <button type="submit" className="SearchForm-button">
-            <span className="SearchForm-button-label">Search</span>
-          </button>
-
-          <input
-            className="SearchForm-input"
-            type="text"
-            onChange={this.changeHandler}
-            value={value}
-            // autocomplete="off"
-            // autofocus
-            placeholder="Search images and photos"
-          />
-        </form>
-      </header>
-    );
-  }
+        <input
+          className="SearchForm-input"
+          type="text"
+          onChange={changeHandler}
+          value={value}
+          // autocomplete="off"
+          // autofocus
+          placeholder="Search images and photos"
+        />
+      </form>
+    </header>
+  );
 }
-
-export default Searchbar;
