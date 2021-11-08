@@ -1,17 +1,12 @@
-import { Component } from 'react';
-
-export default class ImageGalleryItem extends Component {
-  render() {
-    // console.log(this.props.imgFull);
-    return (
-      <li>
-        <img
-          src={this.props.webformatURL}
-          alt=""
-          className="ImageGalleryItem-image"
-          onClick={this.props.showImageHandle}
-        />
-      </li>
-    );
-  }
+export default function ImageGalleryItem({ webformatURL, showImageHandle }) {
+  return (
+    <li>
+      <img
+        src={webformatURL}
+        alt=""
+        className="ImageGalleryItem-image"
+        onClick={showImageHandle}
+      />
+    </li>
+  );
 }
