@@ -1,147 +1,119 @@
 import './styles.css';
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import PixabayFetchFunc, { PER_PAGE } from './services/apiSearchImg';
 import Searchbar from './components/Searchbar/Searchbar';
-import { PixabayFetchFunc } from './services/apiSearchImg';
-import ImageGallery from './components/ImageGallery/ImageGallery';
+import { ImageGallery } from './components/ImageGallery/ImageGallery';
 import Button from './components/Button/Button';
 import Modal from './components/Modal/Modal';
 import Loader from './components/Loader/Loader';
-const BASE_URL = 'https://pixabay.com/api/';
-const API_KEY = '23145424-17de0e2191faefedd106abc58';
-const onLoader = 'false';
-const newPixabayFetchFunc = new PixabayFetchFunc(BASE_URL, API_KEY, onLoader);
-console.log('SEARCH', newPixabayFetchFunc);
-class App extends Component {
-  state = {
-    arreyImages: [],
-    searchQuery: '',
-    searchValue: '',
-    status: 'init',
-    openModal: false,
-    onLoader: false,
-  };
+// const BASE_URL = 'https://pixabay.com/api/';
+// const API_KEY = '23145424-17de0e2191faefedd106abc58';
+// const onLoader = 'false';
+// const newPixabayFetchFunc = new PixabayFetchFunc(BASE_URL, API_KEY, onLoader);
+// console.log('SEARCH', newPixabayFetchFunc);
 
-  fullImageURL = '';
-  componentDidMount() {}
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.searchQuery !== this.state.searchQuery) {
-      this.setState({ onLoader: true });
+export default function App(params) {
+  const [searchQuery, setSearchQuery] = useState('');
+  // const [searchValue, setSearchValue] = useState('');
+  const [modalOpen, setModalOpen] = useState(null);
+  // const [onLoader, setOnLoader] = useState(false);
+  const [arreyImages, setArreyImages] = useState([]);
+  const [searchPage, setSearchPage] = useState(1);
+  const [statusReuest, setStatusReuest] = useState('notInvolved');
+  const [fullImageURL, setFullImageURL] = useState('');
 
-      newPixabayFetchFunc.resetPage();
+  useEffect(() => {
+    if (!searchQuery) return;
+    setStatusReuest('pending');
 
-      newPixabayFetchFunc.searchQuery = this.state.searchQuery;
-      newPixabayFetchFunc
-        .getImages()
-        .then(response => {
-          this.setState({ arreyImages: response });
-          console.log(response);
-        })
+    PixabayFetchFunc.getImages(searchQuery, searchPage).then(data => {
+      if (data.length === 0 && searchPage === 1) {
+        toast.error('Nothing found');
+        setStatusReuest('notInvolved');
+        return;
+      }
+      if (data.length === 0 && searchPage > 1) {
+        toast.error('images is  absent');
+        setStatusReuest('notInvolved');
+        return;
+      }
 
-        .catch(error => {
-          console.log(error);
-        })
-        .finally(() => {
-          this.setState({ onLoader: false });
-          console.log(this.state.onLoader);
-        });
+      const images = data.map(({ id, webformatURL, largeImageURL }) => ({
+        id,
+        webformatURL,
+        largeImageURL,
+      }));
 
-      this.scrollHandler();
+      setArreyImages(prev => [...prev, ...images]);
+      setStatusReuest('resolved');
+    });
+  }, [searchQuery, searchPage]);
+
+  useEffect(() => {
+    if (arreyImages.length <= PER_PAGE) return;
+    scrollHandler();
+  }, [arreyImages]);
+
+  const onsubmitHandler = submitSearchForm => {
+    if (submitSearchForm.trim() === '') {
+      toast.error('Invalid request');
+      return;
     }
-    if (
-      prevState.arreyImages.length !== this.state.arreyImages.length &&
-      prevState.arreyImages.length !== 0
-    ) {
-      this.setState({ openModal: false });
-      this.scrollHandler();
-    }
-  }
-  closeModal = () => {
-    this.fullImageURL = '';
-    this.setState({ openModal: false });
+    setSearchPage(1);
+    setArreyImages([]);
+    setSearchQuery(submitSearchForm);
   };
 
-  showImageHandler = imageURL => () => {
-    this.fullImageURL = imageURL;
-    this.setState({ openModal: true });
-  };
-
-  onsubmitHandler = submitSearchForm => {
-    // this.maxPages = 0;
-
-    this.setState(() => ({
-      // arreyImages: [],
-      searchQuery: submitSearchForm,
-      // searchPage: 1,
-    }));
-  };
-
-  scrollHandler = () => {
+  const scrollHandler = () => {
     setTimeout(() => {
       window.scrollTo({
         top: document.documentElement.scrollHeight,
         behavior: 'smooth',
       });
-    }, 800);
+    });
   };
 
-  loadMoreHandler = () => {
-    newPixabayFetchFunc.searchPage = 1;
-
-    console.log('searchPage', newPixabayFetchFunc.searchPage);
-
-    this.setState({ onLoader: true });
-
-    newPixabayFetchFunc
-      .getImages()
-      .then(arreyImages => {
-        this.setState(prev => ({
-          arreyImages: [...prev.arreyImages, ...arreyImages],
-        }));
-      })
-      .catch(error => {
-        console.log('НАХІБА ТАКЕ РОБИТИ', error);
-      })
-      .finally(() => {
-        return this.setState({ onLoader: false });
-      });
+  const toggleOpenModal = e => {
+    if (e.target === e.currentTarget || e.code === 'Escape') {
+      setModalOpen(prev => !prev);
+    }
+  };
+  const handleClickImages = (e, url) => {
+    setFullImageURL(url);
+    toggleOpenModal(e);
+    console.log(url);
+    console.log('E', e);
   };
 
-  // resetLoader = () => {
-  //   this.setState({ onLoader: true });
-  // };
+  const addPages = () => {
+    setSearchPage(prev => prev + 1);
+  };
 
-  render() {
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.onsubmitHandler} />
+  return (
+    <div className="App">
+      <Searchbar onSubmit={onsubmitHandler} />
 
-        {this.state.arreyImages.length > 0 && (
-          <ImageGallery
-            arreyImages={this.state.arreyImages}
-            scrollHandler={this.scrollHandler}
-            showImageHandler={this.showImageHandler}
-          />
-        )}
+      {arreyImages.length > 0 && (
+        <ImageGallery
+          arreyImages={arreyImages}
+          handleClick={handleClickImages}
+        />
+      )}
 
-        {/* {newPixabayFetchFunc.onLoader && <Loader />} */}
-        {this.state.onLoader && <Loader />}
-        {this.state.arreyImages.length > 0 && (
-          <Button
-            loadMorer={this.loadMoreHandler}
-            // scrollHandler={this.scrollHandler()}
-            text="LOAD MORE..."
-          />
-        )}
-        {this.state.openModal && (
-          <Modal
-            fullImageURL={this.fullImageURL}
-            // fullScrinImages={this.fullScrinImages}
-            exitModal={this.closeModal}
-          ></Modal>
-        )}
-      </div>
-    );
-  }
+      {statusReuest === 'pending' && <Loader />}
+
+      {statusReuest === 'resolved' && (
+        <Button onClick={addPages} text="LOAD MORE..." />
+      )}
+      {modalOpen && (
+        <Modal
+          url={fullImageURL}
+          // fullScrinImages={this.fullScrinImages}
+          exitModal={toggleOpenModal}
+        ></Modal>
+      )}
+      <Toaster />
+    </div>
+  );
 }
-
-export default App;

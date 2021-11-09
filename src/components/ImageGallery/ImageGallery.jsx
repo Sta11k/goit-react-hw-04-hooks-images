@@ -1,16 +1,12 @@
-import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
+import { ImageGalleryItem } from '../ImageGalleryItem/ImageGalleryItem';
 
-export default function ImageGallery({ arreyImages, showImageHandler }) {
+export function ImageGallery({ arreyImages, handleClick }) {
   return (
     <ul className="ImageGallery">
       {arreyImages.map(el => {
         console.log('FULLIMG', el.largeImageURL);
         return (
-          <ImageGalleryItem
-            key={el.id}
-            webformatURL={el.webformatURL}
-            showImageHandle={showImageHandler(el.largeImageURL)}
-          />
+          <ImageGalleryItem key={el.id} image={el} handleClick={handleClick} />
         );
       })}
     </ul>
